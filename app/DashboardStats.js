@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -13,6 +13,33 @@ import {
   RadialBar,
 } from 'recharts';
 import { eachDayOfInterval, format, subDays, subMonths, startOfMonth } from 'date-fns';
+
+const Clock = () => {
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const options = {
+    timeZone: 'Asia/Manila',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  };
+
+  const timeString = time.toLocaleTimeString('en-PH', { timeZone: 'Asia/Manila' });
+  const dateString = time.toLocaleDateString('en-PH', options);
+
+  return (
+    <div className="text-black text-right">
+      <p className="text-sm">{dateString}</p>
+      <p className="text-xl font-bold">{timeString}</p>
+    </div>
+  );
+};
 
 const buttonClass = (btnView, view) =>
   view === btnView
@@ -151,23 +178,23 @@ const DashboardStats = ({ view, setView, devices }) => {
   return (
     <>
       <nav className="flex items-center justify-between bg-neutral-100 p-4">
-        <div className="ml-4">
-          <h1 className="text-2xl font-bold text-black">Technology Transferred Project</h1>
-          <p className="text-base text-black">Monitoring and Control System</p>
-        </div>
-        <div className="flex items-center space-x-4">
-          <button className={buttonClass('home', view)} onClick={() => setView('home')}>
-            Home
-          </button>
-          <button className={buttonClass('dashboard', view)} onClick={() => setView('dashboard')}>
-            Dashboard
-          </button>
-          <button className={buttonClass('addDevice', view)} onClick={() => setView('addDevice')}>
-            <span className="text-xl leading-none">＋</span>{' '}
-            <span className="text-base font-bold">Add Device</span>
-          </button>
-        </div>
-      </nav>
+  <div className="ml-4">
+    <h1 className="text-2xl font-bold text-black">Technology Transferred Project</h1>
+    <p className="text-base text-black">Monitoring and Control System</p>
+  </div>
+  <div className="flex flex-col md:flex-row items-center gap-2 md:space-x-4">
+    <button className={buttonClass('home', view)} onClick={() => setView('home')}>
+      Home
+    </button>
+    <button className={buttonClass('dashboard', view)} onClick={() => setView('dashboard')}>
+      Dashboard
+    </button>
+    <div className="bg-neutral-100 px-4 py-2 rounded text-black">
+      <Clock />
+    </div>
+  </div>
+</nav>
+
 
       {view === 'dashboard' && (
         <div className="min-h-screen p-4 bg-neutral-100 text-black">
@@ -185,7 +212,7 @@ const DashboardStats = ({ view, setView, devices }) => {
                 <div className="flex flex-col md:flex-row gap-6 my-6">
                   <div className="bg-white p-6 rounded-lg shadow w-full md:w-1/2">
                     <h3 className="text-lg font-bold mb-4">Realtime Usage</h3>
-                    <div className="flex justify-between gap-4">
+                    <div className="flex flex-wrap justify-between gap-4">
                       <RadialMeter value={Math.round(data?.Voltage || 0)} unit="Voltage (V)" max={300} color="#FF6384" />
                       <RadialMeter value={data?.Current || 0} unit="Current (A)" max={10} color="#36A2EB" />
                       <RadialMeter value={data?.Power || 0} unit="Power (W)" max={10} color="#FFCE56" />
@@ -193,7 +220,7 @@ const DashboardStats = ({ view, setView, devices }) => {
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow w-full md:w-1/2">
+                  <div className="bg-white p-4 rounded-lg shadow w-full lg:w-1/2">
                     <h3 className="text-lg font-bold mb-2">Realtime Trend</h3>
                     {Array.isArray(history) && history.length > 0 ? (
                       <ResponsiveContainer width="100%" height={280}>
@@ -251,32 +278,37 @@ const DashboardStats = ({ view, setView, devices }) => {
                   </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-6">
-                  <div className="bg-white p-4 rounded shadow w-full md:w-1/2">
-                    <h3 className="text-lg font-bold mb-2">Last 30 Days (kWh)</h3>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={last30DaysData}>
-                        <CartesianGrid stroke="#ccc" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
-                        <Tooltip formatter={(value) => `${value.toFixed(3)} kWh`} />
-                        <Bar dataKey="kWh" fill="#ff4c7b" />
-                      </BarChart>
-                    </ResponsiveContainer>
+                `  <div className="flex flex-col lg:flex-row gap-6">
+                    <div className="bg-white p-4 rounded shadow w-full md:w-1/2">
+                      <h3 className="text-lg font-bold mb-2">Last 30 Days (kWh)</h3>
+                      <div className="w-full overflow-x-auto">
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={last30DaysData}>
+                          <CartesianGrid stroke="#ccc" />
+                          <XAxis dataKey="date" />
+                          <YAxis />
+                          <Tooltip formatter={(value) => `${value.toFixed(3)} kWh`} />
+                          <Bar dataKey="kWh" fill="#ff4c7b" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    </div>
+
+                    <div className="bg-white p-4 rounded shadow w-full md:w-1/2">
+                      <h3 className="text-lg font-bold mb-2">Last 12 Months (kWh)</h3>
+                      <div className="w-full overflow-x-auto">
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={last12MonthsData}>
+                          <CartesianGrid stroke="#ccc" />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <Tooltip formatter={(value) => `${value.toFixed(3)} kWh`} />
+                          <Bar dataKey="kWh" fill="#ff4c7b" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
-                  <div className="bg-white p-4 rounded shadow w-full md:w-1/2">
-                    <h3 className="text-lg font-bold mb-2">Last 12 Months (kWh)</h3>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={last12MonthsData}>
-                        <CartesianGrid stroke="#ccc" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip formatter={(value) => `${value.toFixed(3)} kWh`} />
-                        <Bar dataKey="kWh" fill="#ff4c7b" />
-                      </BarChart>
-                    </ResponsiveContainer>
                   </div>
-                </div>
               </div>
             );
           })}

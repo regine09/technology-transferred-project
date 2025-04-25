@@ -90,8 +90,8 @@ export default function Page() {
   const renderDeviceCard = (device, index) => {
     const d = device.latest;
     return (
-      <div key={index} className="border rounded-lg p-6 shadow w-80 sm:w-70 bg-white text-black">
-        <h3 className="ml-2 w-40 text-black">{device.label.toUpperCase()}</h3>
+      <div key={index} className="border rounded-lg p-6 shadow w-full sm:w-70 md:w-72 lg:w-55 bg-white text-black">
+        <h3 className="ml-2 text-black text-xl font-semibold">{device.label.toUpperCase()}</h3>
         {d ? (
           <>
             <p><strong>Timestamp:</strong> {d.Timestamp?.toString()}</p>
@@ -118,17 +118,9 @@ export default function Page() {
     if (view === 'dashboard') 
       return null;
 
-    if (view === 'addDevice') {
-      return (
-        <div className="min-h-screen bg-yellow-100 flex items-center justify-center text-black text-2xl">
-          Add Device Page
-        </div>
-      );
-    }
-
     return (
       <main className="min-h-screen bg-gray-100 p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 mb-8 justify-items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8 mb-8 justify-items-center">
           {devicesData.map(renderDeviceCard)}
         </div>
 
