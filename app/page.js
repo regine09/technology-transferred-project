@@ -9,7 +9,7 @@ import {
   query,
   orderBy,
   limit,
-  onSnapshot // Ensure this is imported
+  onSnapshot
 } from 'firebase/firestore';
 
 const deviceConfigs = [
@@ -72,10 +72,10 @@ export default function Page() {
         id: doc.id,
         ...doc.data()
       }));
-      setDevice1History(docs.reverse()); // reverse for chronological order
+      setDevice1History(docs.reverse()); 
     });
 
-    return () => unsubscribe(); // Ensure cleanup is done properly
+    return () => unsubscribe(); 
   }, []);
 
   const filteredHistory = history.filter(item =>
@@ -165,7 +165,7 @@ export default function Page() {
                       </td>
                       <td className="p-2">{item.Current} A</td>
                       <td className="p-2">{item.Energy} kWh</td>
-                      <td className="p-2">{item.Power} W</td>
+                      <td className="p-2">{item.Power?.toFixed(2)} W</td>
                       <td className="p-2">{item.Voltage?.toFixed(1)} V</td>
                       <td className="p-2">{item.Latitude}, {item.Longitude}</td>
                     </tr>

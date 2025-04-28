@@ -164,20 +164,33 @@ const DashboardStats = ({ view, setView, devices }) => {
   };
   
 
-  const getUptimeDisplay = (timestamp, isOnline) => {
-    if (!timestamp || !isOnline) return '0d 0h 0m 0s';
+  let lastTimestamp = null; // Variable to track the last saved timestamp.
 
-    const now = new Date();
-    const startTime = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const diffMs = now - startTime;
+const getUptimeDisplay = (timestamp, isOnline) => {
+  if (!isOnline) {
+    // When the device is OFF, reset timestamp and freeze uptime to 0.
+    lastTimestamp = null;  // Reset the timestamp when device goes OFF.
+    return '0d 0h 0m 0s';
+  }
 
-    const seconds = Math.floor((diffMs / 1000) % 60);
-    const minutes = Math.floor((diffMs / (1000 * 60)) % 60);
-    const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
-    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (!lastTimestamp) {
+    // If the device is ON and there's no saved timestamp, save the current timestamp.
+    lastTimestamp = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  }
 
-    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-  };
+  const now = new Date();
+  const startTime = lastTimestamp;  // Use the last saved timestamp.
+
+  const diffMs = now - startTime;
+
+  const seconds = Math.floor((diffMs / 1000) % 60);
+  const minutes = Math.floor((diffMs / (1000 * 60)) % 60);
+  const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+};
+
 
   return (
     <>
@@ -254,22 +267,32 @@ const DashboardStats = ({ view, setView, devices }) => {
                     {Array.isArray(history) && history.length > 0 ? (
                       <ResponsiveContainer width="100%" height={280}>
                         <LineChart
-                          data={history.slice().reverse().slice(0, 10).map((entry) => {
-                            const date = entry.Timestamp?.toDate?.() || new Date(entry.Timestamp);
-                            return {
-                              ...entry,
-                              timeLabel: date.toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                second: '2-digit',
-                              }),
-                              fullLabel: date.toLocaleString(),
-                            };
-                          })}
+                          data={history
+                            .slice() // Create a copy of the array
+                            .sort((a, b) => {
+                              // Sort by Timestamp in descending order
+                              const dateA = a.Timestamp?.toDate?.() || new Date(a.Timestamp);
+                              const dateB = b.Timestamp?.toDate?.() || new Date(b.Timestamp);
+                              return dateB - dateA; // Most recent first
+                            })
+                            .slice(0, 10) // Take the first 10 items
+                            .map((entry) => {
+                              const date = entry.Timestamp?.toDate?.() || new Date(entry.Timestamp);
+                              return {
+                                ...entry,
+                                Power: parseFloat(entry.Power || 0).toFixed(2), 
+                                timeLabel: date.toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  second: '2-digit',
+                                }),
+                                fullLabel: date.toLocaleString(),
+                              };
+                            })}
                         >
                           <CartesianGrid stroke="#ccc" />
                           <XAxis dataKey="timeLabel" />
-                          <YAxis domain={[0, 3]} />
+                          <YAxis domain={[0, 10]} />
                           <Tooltip
                             labelFormatter={(label, payload) =>
                               payload?.[0]?.payload?.fullLabel || label
