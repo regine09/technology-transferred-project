@@ -3,14 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import DashboardStats from './DashboardStats';
 import { db } from './firebaseConfig';
-import {
-  collection,
-  getDocs,
-  query,
-  orderBy,
-  limit,
-  onSnapshot
-} from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
 const deviceConfigs = [
   { label: 'Device 1', collection: 'ESP32_Data' },
@@ -44,8 +37,8 @@ export default function Page() {
           }));
           data.push({
             ...device,
-            latest: docs[0] || null,
-            history: docs
+            latest: docs[0] || null, // Only latest one
+            history: docs             // All documents, but fetched once
           });
         } else {
           data.push({ ...device, latest: null, history: [] });
@@ -66,24 +59,26 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    const q = query(collection(db, 'ESP32_Data'), orderBy('Timestamp', 'desc'), limit(20));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(doc => ({
+    const fetchDevice1History = async () => {
+      const q = query(collection(db, 'ESP32_Data'), orderBy('Timestamp', 'desc'), limit(20));
+      const querySnapshot = await getDocs(q);
+      const docs = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      setDevice1History(docs.reverse()); 
-    });
+      setDevice1History(docs.reverse()); // Oldest first if needed
+    };
 
-    return () => unsubscribe(); 
-  }, []);
+    if (view === 'dashboard') {
+      fetchDevice1History(); // Only fetch when switching to dashboard
+    }
+  }, [view]);
 
   const filteredHistory = history.filter(item =>
     Object.values(item).some(val =>
       typeof val === 'string' && val.toLowerCase().includes(searchQuery.toLowerCase())
     )
   );
-
 
   const displayedHistory = showAll ? filteredHistory : filteredHistory.slice(0, rowsToShow);
 
@@ -96,10 +91,10 @@ export default function Page() {
           <>
             <p><strong>Timestamp:</strong> {d.Timestamp?.toString()}</p>
             <p><strong>WiFi Status:</strong> {d.WiFiStatus === 'Connected' ? (
-                <span className="text-black-600">Connected</span>
-              ) : (
-                <span className="text-grey-600">Connecting</span>
-              )}</p>
+              <span className="text-black-600">Connected</span>
+            ) : (
+              <span className="text-grey-600">Connecting</span>
+            )}</p>
             <p><strong>Status:</strong> <span className={d.Status === 'ON' ? 'text-green-600' : 'text-red-600'}>{d.Status}</span></p>
             <p><strong>Current:</strong> {d.Current} A</p>
             <p><strong>Energy:</strong> {d.Energy} kWh</p>
@@ -115,8 +110,7 @@ export default function Page() {
   };
 
   const renderContent = () => {
-    if (view === 'dashboard') 
-      return null;
+    if (view === 'dashboard') return null;
 
     return (
       <main className="min-h-screen bg-gray-100 p-4">
@@ -195,14 +189,14 @@ export default function Page() {
   return (
     <>
       <DashboardStats
-  view={view}
-  setView={setView}
-  devices={devicesData.map(device => ({
-    name: device.label,
-    data: device.latest,
-    history: device.history
-  }))}
-/>
+        view={view}
+        setView={setView}
+        devices={devicesData.map(device => ({
+          name: device.label,
+          data: device.latest,
+          history: device.history
+        }))}
+      />
 
       {renderContent()}
     </>
