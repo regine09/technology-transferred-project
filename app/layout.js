@@ -8,10 +8,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="antialiased font-geist"
-        data-new-gr-c-s-check-loaded="14.1101.0"
+      <body
+        className="antialiased font-geist"
+        data-new-gr-c-s-check-loaded="14.1104.0"
         data-gr-ext-installed=""
-
       >
         {children}
       </body>
